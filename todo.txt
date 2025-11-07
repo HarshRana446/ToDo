@@ -32,6 +32,5 @@ due date bug fix,
 Git config and its commands
 git branch & branch commands
 Git init ,Git Repo, Git Status, 
-Git Stash
+Git Stash, Git Log
 
-and 10,12,14 exam che and 11, 13 ee casual leave 

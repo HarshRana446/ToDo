@@ -1,0 +1,37 @@
+typescript
+tailwind
+vite / webpack
+package.json
+
+first input for tasks
+then pending task column , then in-progress , done task
+this should be drag and drop we can drag the task raw and also the column pending, in-progress, and done.
+color vise like border of task name which is pending is red
+color vise like border of task name which is pending is yellow
+color of done task with green.
+
+in the add task section we should have following fields new popup
+name 
+due date for tasks
+description
+mobile responsive 
+search tasks
+
+//day-3
+learn the vit.config.ts file with server components and plugins in detail
+and learn components.json file and
+learn app.jsx and main.tsx 
+
+//day-4
+learn tailwind css, learn the package.json file and
+learn the tsconfig.json file
+In the task mobile responsive done.
+
+//day-5
+due date bug fix,
+Git config and its commands
+git branch & branch commands
+Git init ,Git Repo, Git Status
+
+
+and 10,12,14 exam che and 11, 13 ee casual leave 

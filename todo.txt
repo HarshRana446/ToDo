@@ -29,8 +29,9 @@ In the task mobile responsive done.
 
 //day-5
 due date bug fix,
+learn:-
 Git config and its commands
 git branch & branch commands
 Git init ,Git Repo, Git Status, 
-Git Stash, Git Log
+Git Stash, Git Log, Git Merge
 

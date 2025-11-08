@@ -296,7 +296,6 @@ const Index = () => {
       {/* Header */}
       <div className="bg-card shadow-[var(--shadow-sm)] sticky top-0 z-40">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          {/* Changed flex layout */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
               Task Board

@@ -24,7 +24,7 @@ import TaskCard from "@/components/TaskCard";
 import {isDueSoon} from "@/lib/utils.ts";
 import { toast } from "sonner";
 
-
+// default columns and tasks
 const defaultColumns: Column[] = [
   {
     id: "pending",

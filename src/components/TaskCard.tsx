@@ -1,16 +1,17 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Task } from "@/types/task.ts";
-import { X } from "lucide-react";
-import { cn, isDueSoon } from "@/lib/utils.ts";
+import { Task } from "@/types/task";
+import { X, Pencil } from "lucide-react";
+import { cn, isDueSoon } from "@/lib/utils";
 
 interface TaskCardProps {
   task: Task;
   onDeleteTask?: (taskId: string) => void;
+  onEditTask?: (task: Task) => void;
   isOverlay?: boolean;
 }
 
-const TaskCard = ({ task, onDeleteTask, isOverlay = false }: TaskCardProps) => {
+const TaskCard = ({ task, onDeleteTask, onEditTask, isOverlay = false }: TaskCardProps) => {
   const {
     attributes,
     listeners,
@@ -35,6 +36,12 @@ const TaskCard = ({ task, onDeleteTask, isOverlay = false }: TaskCardProps) => {
     e.stopPropagation();
     e.preventDefault();
     onDeleteTask?.(task.id);
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onEditTask?.(task);
   };
 
   const getBorderColor = () => {
@@ -74,17 +81,30 @@ const TaskCard = ({ task, onDeleteTask, isOverlay = false }: TaskCardProps) => {
           task.status === "pending" &&
           !isDragging &&
           !isOverlay &&
-          "bg-destructive/30"
+          "bg-red-100 dark:bg-red-950/50"
       )}
     >
-      {!isDragging && onDeleteTask && (
-        <button
-          onClick={handleDelete}
-          className="hidden group-hover:block absolute top-2 right-2 p-0.5 hover:text-foreground hover:bg-secondary rounded transition-colors cursor-pointer"
-          aria-label="Delete task"
-        >
-          <X className="w-4 h-4 text-muted-foreground" size={16} />
-        </button>
+      {!isDragging && (
+        <div className="hidden group-hover:flex absolute top-2 right-2 gap-1">
+          {onEditTask && (
+            <button
+              onClick={handleEdit}
+              className="p-0.5 hover:text-foreground hover:bg-secondary rounded transition-colors cursor-pointer"
+              aria-label="Edit task"
+            >
+              <Pencil className="w-4 h-4 text-muted-foreground" size={16} />
+            </button>
+          )}
+          {onDeleteTask && (
+            <button
+              onClick={handleDelete}
+              className="p-0.5 hover:text-foreground hover:bg-secondary rounded transition-colors cursor-pointer"
+              aria-label="Delete task"
+            >
+              <X className="w-4 h-4 text-muted-foreground" size={16} />
+            </button>
+          )}
+        </div>
       )}
 
       <h3 className="font-semibold text-foreground mb-2 text-sm">

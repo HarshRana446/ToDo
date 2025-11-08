@@ -21,7 +21,7 @@ import KanbanColumn from "@/components/KanbanColumn";
 import AddTaskModal from "@/components/AddTaskModal";
 import SearchBar from "@/components/SearchBar";
 import TaskCard from "@/components/TaskCard";
-import {isDueSoon} from "@/lib/utils.ts";
+import {isDueSoon} from "@/lib/utils";
 import { toast } from "sonner";
 
 
@@ -35,7 +35,7 @@ const defaultColumns: Column[] = [
         id: "1",
         name: "Design new landing page",
         description: "Create mockups for the new marketing landing page",
-        dueDate: "2025-11-0",
+        dueDate: "2025-11-09",
         status: "pending",
         createdAt: new Date().toISOString(),
       },
@@ -86,6 +86,7 @@ const Index = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus>("pending");
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const toastShownRef = useRef(false);
 
   const [columns, setColumns] = useState<Column[]>(() => {
@@ -201,7 +202,7 @@ const Index = () => {
       });
     });
   };
-// drag end
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveTask(null);
@@ -273,8 +274,26 @@ const Index = () => {
   };
 
   const handleOpenModal = (status: TaskStatus) => {
+    setEditingTask(null);
     setSelectedStatus(status);
     setIsModalOpen(true);
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setSelectedStatus(task.status);
+    setIsModalOpen(true);
+  };
+
+  const handleUpdateTask = (updatedTask: Task) => {
+    setColumns((prevColumns) =>
+      prevColumns.map((col) => ({
+        ...col,
+        tasks: col.tasks.map((task) =>
+          task.id === updatedTask.id ? updatedTask : task
+        ),
+      }))
+    );
   };
 
   useEffect(() => {
@@ -302,7 +321,6 @@ const Index = () => {
               Task Board
             </h1>
 
-            {/* --- ADDED BUTTON HERE --- */}
             <button
               onClick={() => handleOpenModal("pending")}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-[var(--shadow-sm)]"
@@ -338,6 +356,7 @@ const Index = () => {
                   onDeleteTask={(taskId: string) =>
                     handleDeleteTask(taskId, column.id)
                   }
+                  onEditTask={handleEditTask}
                 />
               ))}
             </div>
@@ -355,9 +374,14 @@ const Index = () => {
 
       <AddTaskModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingTask(null);
+        }}
         onAdd={handleAddTask}
+        onUpdate={handleUpdateTask}
         initialStatus={selectedStatus}
+        editTask={editingTask || undefined}
       />
     </div>
   );

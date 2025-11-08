@@ -35,3 +35,6 @@ git branch & branch commands
 Git init ,Git Repo, Git Status, 
 Git Stash, Git Log, Git Merge
 
+Create New branch and push.
+Edit button functionality in To-do app
+apply the Virtualized list

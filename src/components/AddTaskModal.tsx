@@ -135,25 +135,6 @@ const AddTaskModal = ({
             />
           </div>
 
-          <div>
-            <label
-              htmlFor="task-status"
-              className="block text-sm font-medium text-foreground mb-1"
-            >
-              Status
-            </label>
-            <select
-              id="task-status"
-              value={status}
-              onChange={(e) => setStatus(e.target.value as TaskStatus)}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
-            >
-              <option value="pending">Pending</option>
-              <option value="in-progress">In Progress</option>
-              <option value="done">Done</option>
-            </select>
-          </div>
-
           <div className="flex gap-3 pt-4">
             <button
               type="button"

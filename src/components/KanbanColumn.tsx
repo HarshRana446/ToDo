@@ -5,7 +5,6 @@ import {
 } from "@dnd-kit/sortable";
 import { Task, TaskStatus } from "@/types/task";
 import TaskCard from "./TaskCard";
-import { Plus } from "lucide-react";
 
 interface KanbanColumnProps {
   id: TaskStatus;
@@ -35,23 +34,18 @@ const KanbanColumn = ({
             {tasks.length}
           </span>
         </h2>
-        <button
-          onClick={() => onAddTask(id)}
-          className="p-1.5 hover:bg-muted rounded-lg transition-colors"
-          aria-label={`Add task to ${title}`}
-        >
-          <Plus className="w-5 h-5 text-muted-foreground" />
-        </button>
       </div>
 
       <div
         ref={setNodeRef}
-        className="flex flex-col gap-3 min-h-[200px] bg-muted/30 rounded-lg p-3"
+        className="flex flex-col min-h-[200px] bg-muted/30 rounded-lg p-3"
       >
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-          {tasks.map((task) => (
-            <TaskCard key={task.id} task={task} onDeleteTask={onDeleteTask} onEditTask={onEditTask} />
-          ))}
+          <div className="flex flex-col gap-3 overflow-y-auto max-h-[700px]">
+            {tasks.map((task) => (
+              <TaskCard key={task.id} task={task} onDeleteTask={onDeleteTask} onEditTask={onEditTask} />
+            ))}
+          </div>
         </SortableContext>
       </div>
     </div>

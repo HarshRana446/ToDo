@@ -364,7 +364,7 @@ const Index = () => {
                   title={column.title}
                   tasks={column.tasks}
                   onAddTask={handleOpenModal}
-                  onDeleteTask={(taskId: string) =>
+                  onDeleteTask={(taskId: string): void =>
                     handleDeleteTask(taskId, column.id)
                   }
                   onEditTask={handleEditTask}
@@ -399,8 +399,7 @@ const Index = () => {
         isOpen={isColumnModalOpen}
         onClose={() => setIsColumnModalOpen(false)}
         onAdd={handleAddColumn}
-      />  
-
+      />
     </div>
   );
 };

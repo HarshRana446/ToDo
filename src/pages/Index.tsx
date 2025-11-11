@@ -18,6 +18,8 @@ import {
 } from "@dnd-kit/sortable";
 import { Task, TaskStatus, Column } from "@/types/task";
 import KanbanColumn from "@/components/KanbanColumn";
+import AddColumnModal from "@/components/AddColumnModel.tsx";
+import AddColumnButton from "@/components/AddColumnButton";
 import AddTaskModal from "@/components/AddTaskModal";
 import SearchBar from "@/components/SearchBar";
 import TaskCard from "@/components/TaskCard";
@@ -83,6 +85,7 @@ const STORAGE_KEY = "kanban-board-columns";
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus>("pending");
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -295,6 +298,15 @@ const Index = () => {
     );
   };
 
+    const handleAddColumn = (title: string) => {
+    const newColumn: Column = {
+      id: `column-${Date.now()}`,
+      title,
+      tasks: [],
+    };
+    setColumns((prevColumns) => [...prevColumns, newColumn]);
+  };
+
   useEffect(() => {
     if(toastShownRef.current) return;
 
@@ -358,6 +370,7 @@ const Index = () => {
                   onEditTask={handleEditTask}
                 />
               ))}
+              <AddColumnButton onClick={() => setIsColumnModalOpen(true)} />
             </div>
           </SortableContext>
 
@@ -382,6 +395,12 @@ const Index = () => {
         initialStatus={selectedStatus}
         editTask={editingTask || undefined}
       />
+      <AddColumnModal
+        isOpen={isColumnModalOpen}
+        onClose={() => setIsColumnModalOpen(false)}
+        onAdd={handleAddColumn}
+      />  
+
     </div>
   );
 };

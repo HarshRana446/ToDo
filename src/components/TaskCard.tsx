@@ -15,7 +15,7 @@ const TaskCard = ({ task, onDeleteTask, onEditTask, isOverlay = false }: TaskCar
   const {
     attributes,
     listeners,
-    setNodeRef,
+    setNodeRef, 
     transform,
     transition,
     isDragging,

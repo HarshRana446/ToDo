@@ -10,6 +10,7 @@ color vise like border of task name which is pending is red
 color vise like border of task name which is pending is yellow
 color of done task with green.
 
+
 in the add task section we should have following fields new popup
 name 
 due date for tasks
@@ -17,17 +18,15 @@ description
 mobile responsive 
 search tasks
 
-//day-3
 learn the vit.config.ts file with server components and plugins in detail
 and learn components.json file and
 learn app.jsx and main.tsx 
 
-//day-4
 learn tailwind css, learn the package.json file and
 learn the tsconfig.json file
 In the task mobile responsive done.
 
-//day-5
+
 due date bug fix,
 learn:-
 Git config and its commands
@@ -38,4 +37,10 @@ Git Stash, Git Log, Git Merge
 Create New branch and push.
 Edit button functionality in To-do app
 apply the Virtualized list
+
+Add a Dynamic column like a pending, 
+in-progress, done.
+
+learn and implement the Create,
+Update and Delete functionality in Task.
 

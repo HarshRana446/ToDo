@@ -39,8 +39,10 @@ Edit button functionality in To-do app
 apply the Virtualized list
 
 Add a Dynamic column like a pending, 
-in-progress, done.
+in-progress, done. 
 
 learn and implement the Create,
 Update and Delete functionality in Task.
+
+fix the bug in mobile responsive.
 

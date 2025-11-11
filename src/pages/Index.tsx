@@ -25,7 +25,6 @@ import {isDueSoon} from "@/lib/utils";
 import { toast } from "sonner";
 
 
-// Default columns and tasks
 const defaultColumns: Column[] = [
   {
     id: "pending",

@@ -16,7 +16,7 @@ app.use(
     limit: "50mb",
   })
 );
-app.use("/api/auth", authroutes);
+app.use("/auth", authroutes);
 
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);

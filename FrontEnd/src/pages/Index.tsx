@@ -104,14 +104,6 @@ const Index = () => {
     return defaultColumns;
   });
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(columns));
-    } catch (error) {
-      console.error("Failed to save columns to localStorage", error);
-    }
-  }, [columns]);
-
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {

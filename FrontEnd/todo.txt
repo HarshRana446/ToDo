@@ -52,3 +52,5 @@ User profile
 
 UI improvement in search feature
 confirmation pop-up for Delete button
+Backend set up for login and sign up with database
+create an api for login and sign up user

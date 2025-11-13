@@ -46,3 +46,6 @@ Update and Delete functionality in Task.
 
 fix the bug in mobile responsive.
 
+//Task 
+sign up, login log out , confirmation of Delete,UI improvement Search
+User profile

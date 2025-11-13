@@ -2,8 +2,11 @@ import dotenv from "dotenv";
 import cors from "cors";
 import express from "express";
 import http from "http";
+import connectDB from "./DB/db.js";
+import authroutes from "./routes/auth.routes.js";
 
 dotenv.config();
+connectDB();
 
 const app = express();
 
@@ -13,6 +16,7 @@ app.use(
     limit: "50mb",
   })
 );
+app.use("/api/auth", authroutes);
 
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);

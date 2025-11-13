@@ -1,8 +1,19 @@
+import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Task } from "@/types/task";
 import { X, Pencil } from "lucide-react";
 import { cn, isDueSoon } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface TaskCardProps {
   task: Task;
@@ -12,10 +23,12 @@ interface TaskCardProps {
 }
 
 const TaskCard = ({ task, onDeleteTask, onEditTask, isOverlay = false }: TaskCardProps) => {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  
   const {
     attributes,
     listeners,
-    setNodeRef, 
+    setNodeRef,
     transform,
     transition,
     isDragging,
@@ -32,10 +45,15 @@ const TaskCard = ({ task, onDeleteTask, onEditTask, isOverlay = false }: TaskCar
         touchAction: "none",
       };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = () => {
+    onDeleteTask?.(task.id);
+    setShowDeleteDialog(false);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    onDeleteTask?.(task.id);
+    setShowDeleteDialog(true);
   };
 
   const handleEdit = (e: React.MouseEvent) => {
@@ -97,7 +115,7 @@ const TaskCard = ({ task, onDeleteTask, onEditTask, isOverlay = false }: TaskCar
           )}
           {onDeleteTask && (
             <button
-              onClick={handleDelete}
+              onClick={handleDeleteClick}
               className="p-0.5 hover:text-foreground hover:bg-secondary rounded transition-colors cursor-pointer"
               aria-label="Delete task"
             >
@@ -120,6 +138,21 @@ const TaskCard = ({ task, onDeleteTask, onEditTask, isOverlay = false }: TaskCar
           Due: {formatDate(task.dueDate)}
         </span>
       </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Task</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{task.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Confirm</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

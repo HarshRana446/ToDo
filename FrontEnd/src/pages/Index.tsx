@@ -18,9 +18,9 @@ import {
 } from "@dnd-kit/sortable";
 import { Task, TaskStatus, Column } from "@/types/task";
 import KanbanColumn from "@/components/KanbanColumn";
-import AddColumnModal from "@/components/AddColumnModel.tsx";
-import AddColumnButton from "@/components/AddColumnButton";
 import AddTaskModal from "@/components/AddTaskModal";
+import AddColumnModal from "@/components/AddColumnModel";
+import AddColumnButton from "@/components/AddColumnButton";
 import SearchBar from "@/components/SearchBar";
 import TaskCard from "@/components/TaskCard";
 import {isDueSoon} from "@/lib/utils";
@@ -130,7 +130,7 @@ const Index = () => {
   const filteredColumns = useMemo(() => {
     if (!searchQuery.trim()) return columns;
 
-    const filteredTasksInColumns = columns.map((column) => ({
+    return columns.map((column) => ({
       ...column,
       tasks: column.tasks.filter(
         (task) =>
@@ -138,7 +138,6 @@ const Index = () => {
           task.description.toLowerCase().includes(searchQuery.toLowerCase())
       ),
     }));
-    return filteredTasksInColumns.filter((column) => column.tasks.length > 0);
   }, [columns, searchQuery]);
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -298,7 +297,7 @@ const Index = () => {
     );
   };
 
-    const handleAddColumn = (title: string) => {
+  const handleAddColumn = (title: string) => {
     const newColumn: Column = {
       id: `column-${Date.now()}`,
       title,
@@ -364,12 +363,13 @@ const Index = () => {
                   title={column.title}
                   tasks={column.tasks}
                   onAddTask={handleOpenModal}
-                  onDeleteTask={(taskId: string): void =>
+                  onDeleteTask={(taskId: string) =>
                     handleDeleteTask(taskId, column.id)
                   }
                   onEditTask={handleEditTask}
                 />
               ))}
+              
               <AddColumnButton onClick={() => setIsColumnModalOpen(true)} />
             </div>
           </SortableContext>
@@ -395,6 +395,7 @@ const Index = () => {
         initialStatus={selectedStatus}
         editTask={editingTask || undefined}
       />
+
       <AddColumnModal
         isOpen={isColumnModalOpen}
         onClose={() => setIsColumnModalOpen(false)}

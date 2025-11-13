@@ -36,7 +36,7 @@ Git Stash, Git Log, Git Merge
 
 Create New branch and push.
 Edit button functionality in To-do app
-apply the Virtualized list
+apply the Virtualized list.
 
 Add a Dynamic column like a pending, 
 in-progress, done. 

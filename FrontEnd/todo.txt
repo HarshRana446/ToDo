@@ -58,4 +58,6 @@ create an api for login and sign up user
 create a login and sign up UI
 create a Userprofile section
 saves the User details in database.
+create a Model, controller & routes for tasks.
+test the api for tasks.
 

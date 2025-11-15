@@ -5,6 +5,7 @@ import http from "http";
 import connectDB from "./DB/db.js";
 import authroutes from "./routes/auth.routes.js";
 import userroutes from "./routes/user.routes.js";
+import taskroutes from "./routes/task.routes.js";
 
 dotenv.config();
 connectDB();
@@ -19,6 +20,7 @@ app.use(
 );
 app.use("/auth", authroutes);
 app.use("/user", userroutes);
+app.use("/task", taskroutes);
 
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);

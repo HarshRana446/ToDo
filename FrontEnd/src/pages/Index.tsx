@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/auth.context";
 import {
   DndContext,
   DragEndEvent,
@@ -23,9 +25,8 @@ import AddColumnModal from "@/components/AddColumnModel";
 import AddColumnButton from "@/components/AddColumnButton";
 import SearchBar from "@/components/SearchBar";
 import TaskCard from "@/components/TaskCard";
-import {isDueSoon} from "@/lib/utils";
-import { toast } from "sonner";
-
+import UserProfileDropdown from "@/components/UserProfileDropdown";
+import { Button } from "@/components/ui/button";
 
 const defaultColumns: Column[] = [
   {
@@ -83,13 +84,20 @@ const defaultColumns: Column[] = [
 const STORAGE_KEY = "kanban-board-columns";
 
 const Index = () => {
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus>("pending");
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const toastShownRef = useRef(false);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate("/login");
+    }
+  }, [user, isLoading, navigate]);
 
   const [columns, setColumns] = useState<Column[]>(() => {
     try {
@@ -103,6 +111,14 @@ const Index = () => {
 
     return defaultColumns;
   });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(columns));
+    } catch (error) {
+      console.error("Failed to save columns to localStorage", error);
+    }
+  }, [columns]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -298,21 +314,6 @@ const Index = () => {
     setColumns((prevColumns) => [...prevColumns, newColumn]);
   };
 
-  useEffect(() => {
-    if(toastShownRef.current) return;
-
-    const timer = setTimeout(() => {
-      const allTasks = columns.flatMap((col) => col.tasks);
-      const tasksDueSoon = allTasks.filter((task) => isDueSoon(task.dueDate) !== null);
-
-      if(tasksDueSoon.length > 0) {
-        toast.warning(`You have ${tasksDueSoon.length} task(s) due within few days!`);
-        toastShownRef.current = true;
-      }
-    },500);
-    return () => clearTimeout(timer);
-  },[columns]);
-
   return (
     <div className="min-h-screen bg-[hsl(var(--board-bg))]">
       {/* Header */}
@@ -323,14 +324,18 @@ const Index = () => {
               Task Board
             </h1>
 
-            <button
-              onClick={() => handleOpenModal("pending")}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-[var(--shadow-sm)]"
-            >
-              Add New Task
-            </button>
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={() => handleOpenModal("pending")}
+                className="shadow-[var(--shadow-sm)]"
+              >
+                Add New Task
+              </Button>
 
-            <SearchBar value={searchQuery} onChange={setSearchQuery} />
+              <SearchBar value={searchQuery} onChange={setSearchQuery} />
+
+              <UserProfileDropdown />
+            </div>
           </div>
         </div>
       </div>
@@ -361,7 +366,7 @@ const Index = () => {
                   onEditTask={handleEditTask}
                 />
               ))}
-              
+
               <AddColumnButton onClick={() => setIsColumnModalOpen(true)} />
             </div>
           </SortableContext>

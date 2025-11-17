@@ -123,6 +123,42 @@ const Index = () => {
     setActiveTask(task || null);
   };
 
+  const handleDragOver = (event) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeId = active.id;
+    const overId = over.id;
+
+    const activeColumn = columns.find((col) =>
+      col.tasks.some((t) => t.id === activeId)
+    );
+    const overColumn = columns.find((col) =>
+      col.tasks.some((t) => t.id === overId)
+    );
+
+    if (!activeColumn || !overColumn) return;
+
+    if (activeColumn.id !== overColumn.id) return;
+
+    const activeTasks = activeColumn.tasks;
+    const overIndex = overColumn.tasks.findIndex((t) => t.id === overId);
+    const activeIndex = activeTasks.findIndex((t) => t.id === activeId);
+
+    if (activeIndex !== overIndex) {
+      setColumns((prev) =>
+        prev.map((col) =>
+          col.id === activeColumn.id
+            ? {
+                ...col,
+                tasks: arrayMove(col.tasks, activeIndex, overIndex),
+              }
+            : col
+        )
+      );
+    }
+  };
+
   const handleDragEnd = async ({ active, over }) => {
     setActiveTask(null);
     if (!over) return;
@@ -308,13 +344,11 @@ const Index = () => {
         <DndContext
           sensors={sensors}
           onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
           <SortableContext
-            items={columns.flatMap((col) => [
-              col.id,
-              ...col.tasks.map((t) => t.id),
-            ])}
+            items={columns.map((col) => col.id)}
             strategy={horizontalListSortingStrategy}
           >
             <div className="flex flex-col lg:flex-row gap-6 pb-4">

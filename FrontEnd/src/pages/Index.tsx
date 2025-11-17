@@ -27,61 +27,36 @@ import SearchBar from "@/components/SearchBar";
 import TaskCard from "@/components/TaskCard";
 import UserProfileDropdown from "@/components/UserProfileDropdown";
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api.js";
 
-const defaultColumns: Column[] = [
-  {
-    id: "pending",
-    title: "Pending",
-    tasks: [
-      {
-        id: "1",
-        name: "Design new landing page",
-        description: "Create mockups for the new marketing landing page",
-        dueDate: "2025-11-09",
-        status: "pending",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "2",
-        name: "Review pull requests",
-        description: "Check and merge pending PRs from the team",
-        dueDate: "2025-11-08",
-        status: "pending",
-        createdAt: new Date().toISOString(),
-      },
-    ],
-  },
-  {
-    id: "in-progress",
-    title: "In Progress",
-    tasks: [
-      {
-        id: "3",
-        name: "Implement authentication",
-        description: "Add user login and registration functionality",
-        dueDate: "2025-11-30",
-        status: "in-progress",
-        createdAt: new Date().toISOString(),
-      },
-    ],
-  },
-  {
-    id: "done",
-    title: "Done",
-    tasks: [
-      {
-        id: "4",
-        name: "Setup project structure",
-        description: "Initialize the React project with all dependencies",
-        dueDate: "2025-11-25",
-        status: "done",
-        createdAt: new Date().toISOString(),
-      },
-    ],
-  },
-];
+function groupTasks(tasks) {
+  const mappedTasks = tasks.map((task) => ({
+    id: task._id,
+    name: task.title,
+    description: task.description || "",
+    dueDate: task.dueDate ? task.dueDate : null,
+    status: task.status || "pending",
+    createdAt: task.createdAt || new Date().toISOString(),
+  }));
 
-const STORAGE_KEY = "kanban-board-columns";
+  return [
+    {
+      id: "pending",
+      title: "Pending",
+      tasks: mappedTasks.filter((t) => t.status === "pending"),
+    },
+    {
+      id: "in-progress",
+      title: "In Progress",
+      tasks: mappedTasks.filter((t) => t.status === "in-progress"),
+    },
+    {
+      id: "done",
+      title: "Done",
+      tasks: mappedTasks.filter((t) => t.status === "done"),
+    },
+  ];
+}
 
 const Index = () => {
   const { user, isLoading } = useAuth();
@@ -99,26 +74,18 @@ const Index = () => {
     }
   }, [user, isLoading, navigate]);
 
-  const [columns, setColumns] = useState<Column[]>(() => {
-    try {
-      const savedColumns = localStorage.getItem(STORAGE_KEY);
-      if (savedColumns) {
-        return JSON.parse(savedColumns);
-      }
-    } catch (error) {
-      console.error("Failed to parse columns from localStorage", error);
-    }
-
-    return defaultColumns;
-  });
+  const [columns, setColumns] = useState([]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(columns));
-    } catch (error) {
-      console.error("Failed to save columns to localStorage", error);
-    }
-  }, [columns]);
+    api("/task")
+      .then((res) => {
+        console.log("Backend Tasks", res.tasks);
+        setColumns(groupTasks(res.tasks));
+      })
+      .catch((err) => {
+        console.error("Failed to fetch tasks from backend", err);
+      });
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -156,130 +123,101 @@ const Index = () => {
     setActiveTask(task || null);
   };
 
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
+  const handleDragEnd = async ({ active, over }) => {
+    setActiveTask(null);
     if (!over) return;
 
-    const activeId = active.id as string;
-    const overId = over.id as string;
+    const activeId = active.id;
+
+    // Find the column you're dropping into
+    const dropColumnDirect = columns.find((col) => col.id === over.id);
+    const dropColumnByTask = columns.find((col) =>
+      col.tasks.some((t) => t.id === over.id)
+    );
+
+    const finalColumn = dropColumnDirect || dropColumnByTask;
+    if (!finalColumn) return;
+
+    const newStatus = finalColumn.id; // "pending", "in-progress", "done"
 
     const activeColumn = columns.find((col) =>
-      col.tasks.some((task) => task.id === activeId)
-    );
-    const overColumn = columns.find(
-      (col) => col.id === overId || col.tasks.some((task) => task.id === overId)
+      col.tasks.some((t) => t.id === activeId)
     );
 
-    if (!activeColumn || !overColumn || activeColumn.id === overColumn.id)
-      return;
+    const task = activeColumn?.tasks.find((t) => t.id === activeId);
+    if (!task) return;
 
-    setColumns((prevColumns) => {
-      const activeItems = activeColumn.tasks;
-      const overItems = overColumn.tasks;
+    if (task.status === newStatus) return;
 
-      const activeIndex = activeItems.findIndex((task) => task.id === activeId);
-
-      if (activeIndex === -1) {
-        return prevColumns;
-      }
-
-      const overIndex = overItems.findIndex((task) => task.id === overId);
-
-      const activeTask = activeItems[activeIndex];
-      const updatedTask = {
-        ...activeTask,
-        status: overColumn.id as TaskStatus,
-      };
-
-      return prevColumns.map((col) => {
-        if (col.id === activeColumn.id) {
-          return {
-            ...col,
-            tasks: col.tasks.filter((task) => task.id !== activeId),
-          };
-        }
-        if (col.id === overColumn.id) {
-          const newTasks = [...col.tasks];
-          if (overIndex >= 0) {
-            newTasks.splice(overIndex, 0, updatedTask);
-          } else {
-            newTasks.push(updatedTask);
-          }
-          return { ...col, tasks: newTasks };
-        }
-        return col;
+    try {
+      await api(`/task/${activeId}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: newStatus }),
       });
-    });
-  };
+    } catch (err) {
+      console.error("Failed to update status:", err);
+    }
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveTask(null);
-
-    if (!over) return;
-
-    const activeId = active.id as string;
-    const overId = over.id as string;
-
-    if (activeId === overId) return;
-
-    setColumns((prevColumns) => {
-      const activeColumn = prevColumns.find((col) =>
-        col.tasks.some((task) => task.id === activeId)
-      );
-
-      const overColumn = prevColumns.find((col) =>
-        col.tasks.some((task) => task.id === overId)
-      );
-
-      if (activeColumn && overColumn && activeColumn.id === overColumn.id) {
-        const activeIndex = activeColumn.tasks.findIndex(
-          (task) => task.id === activeId
-        );
-        const overIndex = activeColumn.tasks.findIndex(
-          (task) => task.id === overId
-        );
-
-        if (activeIndex !== -1 && overIndex !== -1) {
-          return prevColumns.map((col) => {
-            if (col.id === activeColumn.id) {
-              return {
-                ...col,
-                tasks: arrayMove(col.tasks, activeIndex, overIndex),
-              };
-            }
-            return col;
-          });
-        }
-      }
-
-      return prevColumns;
-    });
-  };
-
-  const handleAddTask = (taskData: Omit<Task, "id" | "createdAt">) => {
-    const newTask: Task = {
-      ...taskData,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-    };
-
-    setColumns((prevColumns) =>
-      prevColumns.map((col) =>
-        col.id === taskData.status
-          ? { ...col, tasks: [newTask, ...col.tasks] }
-          : col
-      )
-    );
-  };
-
-  const handleDeleteTask = (taskId: string, status: TaskStatus) => {
-    setColumns((prevColumns) =>
-      prevColumns.map((col) => ({
+    // Update UI
+    setColumns((prev) =>
+      prev.map((col) => ({
         ...col,
-        tasks: col.tasks.filter((task) => task.id !== taskId),
+        tasks:
+          col.id === activeColumn.id
+            ? col.tasks.filter((t) => t.id !== activeId)
+            : col.id === newStatus
+            ? [{ ...task, status: newStatus }, ...col.tasks]
+            : col.tasks,
       }))
     );
+  };
+
+  const handleAddTask = async (taskData) => {
+    try {
+      const res = await api("/task", {
+        method: "POST",
+        body: JSON.stringify({
+          title: taskData.name,
+          description: taskData.description,
+          dueDate: taskData.dueDate,
+          status: taskData.status,
+        }),
+      });
+
+      const newTask = {
+        id: res.task._id,
+        name: res.task.title,
+        description: res.task.description,
+        dueDate: res.task.dueDate,
+        status: res.task.status,
+        createdAt: res.task.createdAt,
+      };
+
+      setColumns((prevColumns) =>
+        prevColumns.map((col) =>
+          col.id === newTask.status
+            ? { ...col, tasks: [newTask, ...col.tasks] }
+            : col
+        )
+      );
+    } catch (error) {
+      console.error("Error creating task:", error);
+    }
+  };
+
+  const handleDeleteTask = async (taskId, status) => {
+    try {
+      await api(`/task/${taskId}`, { method: "DELETE" });
+
+      setColumns((prev) =>
+        prev.map((col) => ({
+          ...col,
+          tasks: col.tasks.filter((task) => task.id !== taskId),
+        }))
+      );
+    } catch (error) {
+      console.error("Failed to delete task", error);
+    }
   };
 
   const handleOpenModal = (status: TaskStatus) => {
@@ -294,15 +232,40 @@ const Index = () => {
     setIsModalOpen(true);
   };
 
-  const handleUpdateTask = (updatedTask: Task) => {
-    setColumns((prevColumns) =>
-      prevColumns.map((col) => ({
-        ...col,
-        tasks: col.tasks.map((task) =>
-          task.id === updatedTask.id ? updatedTask : task
-        ),
-      }))
-    );
+  const handleUpdateTask = async (updatedTask) => {
+    try {
+      const res = await api(`/task/${updatedTask.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          title: updatedTask.name,
+          description: updatedTask.description,
+          dueDate: updatedTask.dueDate,
+          status: updatedTask.status,
+        }),
+      });
+
+      const backendTask = res.task;
+
+      setColumns((prev) =>
+        prev.map((col) => ({
+          ...col,
+          tasks: col.tasks.map((t) =>
+            t.id === backendTask._id
+              ? {
+                  id: backendTask._id,
+                  name: backendTask.title,
+                  description: backendTask.description,
+                  status: backendTask.status,
+                  dueDate: backendTask.dueDate,
+                  createdAt: backendTask.createdAt,
+                }
+              : t
+          ),
+        }))
+      );
+    } catch (err) {
+      console.error("Failed to update task", err);
+    }
   };
 
   const handleAddColumn = (title: string) => {
@@ -345,11 +308,13 @@ const Index = () => {
         <DndContext
           sensors={sensors}
           onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
           <SortableContext
-            items={columns.map((col) => col.id)}
+            items={columns.flatMap((col) => [
+              col.id,
+              ...col.tasks.map((t) => t.id),
+            ])}
             strategy={horizontalListSortingStrategy}
           >
             <div className="flex flex-col lg:flex-row gap-6 pb-4">

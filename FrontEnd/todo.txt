@@ -61,3 +61,4 @@ saves the User details in database.
 create a Model, controller & routes for tasks.
 test the api for tasks.
 
+frontend and backend bug fix

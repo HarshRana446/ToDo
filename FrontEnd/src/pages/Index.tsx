@@ -165,7 +165,6 @@ const Index = () => {
 
     const activeId = active.id;
 
-    // Find the column you're dropping into
     const dropColumnDirect = columns.find((col) => col.id === over.id);
     const dropColumnByTask = columns.find((col) =>
       col.tasks.some((t) => t.id === over.id)
@@ -174,7 +173,7 @@ const Index = () => {
     const finalColumn = dropColumnDirect || dropColumnByTask;
     if (!finalColumn) return;
 
-    const newStatus = finalColumn.id; // "pending", "in-progress", "done"
+    const newStatus = finalColumn.id;
 
     const activeColumn = columns.find((col) =>
       col.tasks.some((t) => t.id === activeId)
@@ -194,7 +193,6 @@ const Index = () => {
       console.error("Failed to update status:", err);
     }
 
-    // Update UI
     setColumns((prev) =>
       prev.map((col) => ({
         ...col,

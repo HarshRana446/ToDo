@@ -37,7 +37,7 @@ const KanbanColumn = ({
 
       <div
         ref={setNodeRef}
-        className="flex flex-col min-h-[200px] bg-muted/30 rounded-lg p-3"
+        className="flex flex-col min-h-[200px] bg-gray-200 rounded-lg p-3"
       >
         <SortableContext
           items={tasks.map((t) => t.id)}

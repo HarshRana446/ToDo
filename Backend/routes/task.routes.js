@@ -5,11 +5,13 @@ import {
   getTasks,
   updateTaskStatus,
   updateTask,
-  deleteTask
+  deleteTask,
+  reorderTasks
 } from "../controller/task.controller.js";
 
 const router = express.Router();
 
+router.put("/reorder", AuthMiddleware, reorderTasks);
 router.post("/", AuthMiddleware, createTask);
 router.get("/", AuthMiddleware, getTasks);
 router.patch("/:id/status", AuthMiddleware, updateTaskStatus);

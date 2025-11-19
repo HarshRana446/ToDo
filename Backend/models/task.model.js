@@ -28,8 +28,15 @@ const taskSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    order:{
+      type: Number,
+      required: true,
+      default: 0,
+    }
   },
   { timestamps: true }
 );
 
-export default mongoose.models.Task || mongoose.model("Task", taskSchema);
+const Task = mongoose.model("Task", taskSchema);
+
+export default Task;

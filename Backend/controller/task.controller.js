@@ -20,7 +20,7 @@ export const createTask = async (req, res) => {
 export const getTasks = async (req, res) => {
   try {
     const tasks = await Task.find({ userId: req.user.userId }).sort({
-      createdAt: -1,
+      order: 1,
     });
     res.status(200).json({ tasks });
   } catch (error) {
@@ -94,3 +94,23 @@ export const deleteTask = async (req, res) => {
   }
 };
 
+export const reorderTasks = async (req, res) => {
+  try {
+    const { tasks } = req.body;
+
+    const updates = tasks.map((t) => {
+      return Task.findOneAndUpdate(
+        { _id: t._id, userId: req.user.userId },
+        { order: t.order },
+        { new: true }
+      );
+    });
+
+    await Promise.all(updates);
+
+    return res.status(200).json({ message: "Tasks reordered successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};

@@ -205,6 +205,21 @@ const Index = () => {
       }))
     );
   };
+  setTimeout(() => {
+    const reordered = columns.flatMap((col) =>
+      col.tasks.map((task, index) => ({
+        _id: task.id,
+        order: index,
+      }))
+    );
+
+    api("/task/reorder", {
+      method: "PUT",
+      body: JSON.stringify({ tasks: reordered }),
+    }).catch((err) => {
+      console.error("Failed to reorder tasks:", err);
+    });
+  }, 0);
 
   const handleAddTask = async (taskData) => {
     try {
@@ -261,7 +276,10 @@ const Index = () => {
   };
 
   const handleEditTask = (task: Task) => {
-    setEditingTask(task);
+    setEditingTask({
+      ...task,
+      dueDate: task.dueDate ? task.dueDate.split("T")[0] : "",
+    });
     setSelectedStatus(task.status);
     setIsModalOpen(true);
   };

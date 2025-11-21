@@ -7,7 +7,8 @@ export const createTask = async (req, res) => {
       description: req.body.description,
       userId: req.user.userId,
       dueDate: req.body.dueDate,
-      status: req.body.status || "pending",
+      columnId: req.body.columnId || "pending",
+      status: req.body.columnId || "pending",
     };
     const task = await Task.create(payload);
     res.status(201).json({ task });
@@ -31,11 +32,11 @@ export const getTasks = async (req, res) => {
 
 export const updateTaskStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { columnId } = req.body;
 
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.userId },
-      { status },
+      { columnId, status: columnId },
       { new: true }
     );
 
@@ -56,7 +57,8 @@ export const updateTask = async (req, res) => {
       title: req.body.title,
       description: req.body.description,
       dueDate: req.body.dueDate,
-      status: req.body.status,
+      status: req.body.status || req.body.columnId,
+      columnId: req.body.status || req.body.columnId,
     };
 
     const task = await Task.findOneAndUpdate(

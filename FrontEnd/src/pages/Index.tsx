@@ -1,24 +1,21 @@
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/auth.context";
 import {
   DndContext,
-  DragEndEvent,
-  DragOverEvent,
   DragOverlay,
-  TouchSensor,
-  KeyboardSensor,
   DragStartEvent,
   PointerSensor,
-  useSensor,
+  TouchSensor,
+  KeyboardSensor,
   useSensors,
+  useSensor,
 } from "@dnd-kit/core";
 import {
-  arrayMove,
   SortableContext,
   horizontalListSortingStrategy,
+  arrayMove,
 } from "@dnd-kit/sortable";
-import { Task, TaskStatus, Column } from "@/types/task";
 import KanbanColumn from "@/components/KanbanColumn";
 import AddTaskModal from "@/components/AddTaskModal";
 import AddColumnModal from "@/components/AddColumnModel";
@@ -29,77 +26,58 @@ import UserProfileDropdown from "@/components/UserProfileDropdown";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api.js";
 
-function groupTasks(tasks) {
-  const mappedTasks = tasks.map((task) => ({
-    id: task._id,
-    name: task.title,
-    description: task.description || "",
-    dueDate: task.dueDate ? task.dueDate : null,
-    status: task.status || "pending",
-    createdAt: task.createdAt || new Date().toISOString(),
-  }));
-
-  return [
-    {
-      id: "pending",
-      title: "Pending",
-      tasks: mappedTasks.filter((t) => t.status === "pending"),
-    },
-    {
-      id: "in-progress",
-      title: "In Progress",
-      tasks: mappedTasks.filter((t) => t.status === "in-progress"),
-    },
-    {
-      id: "done",
-      title: "Done",
-      tasks: mappedTasks.filter((t) => t.status === "done"),
-    },
-  ];
-}
-
 const Index = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<TaskStatus>("pending");
-  const [activeTask, setActiveTask] = useState<Task | null>(null);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-
-  useEffect(() => {
-    if (!isLoading && !user) {
-      navigate("/login");
-    }
-  }, [user, isLoading, navigate]);
+  const [selectedStatus, setSelectedStatus] = useState("pending");
+  const [activeTask, setActiveTask] = useState(null);
+  const [editingTask, setEditingTask] = useState(null);
 
   const [columns, setColumns] = useState([]);
 
   useEffect(() => {
-    api("/task")
-      .then((res) => {
-        console.log("Backend Tasks", res.tasks);
-        setColumns(groupTasks(res.tasks));
+    if (!isLoading && !user) navigate("/login");
+  }, [user, isLoading, navigate]);
+
+  function fetch() {
+    Promise.all([api("/tasks"), api("/columns")])
+      .then(([tasksRes, columnsRes]) => {
+        const cols = columnsRes.columns;
+        const tasks = tasksRes.tasks;
+
+        const formatted = cols.map((col) => ({
+          id: col._id,
+          title: col.title,
+          tasks: tasks
+            .filter((t) => t.columnId === col._id)
+            .map((task) => ({
+              id: task._id,
+              name: task.title,
+              description: task.description || "",
+              dueDate: task.dueDate || null,
+              columnId: task.columnId || "pending",
+              status: task.status || "pending",
+            })),
+        }));
+
+        setColumns(formatted);
       })
-      .catch((err) => {
-        console.error("Failed to fetch tasks from backend", err);
-      });
+      .catch((err) => console.error("Failed To load", err));
+  }
+  useEffect(() => {
+    fetch();
   }, []);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 250,
-        tolerance: 5,
-      },
+      activationConstraint: { delay: 250, tolerance: 5 },
     }),
-    useSensor(KeyboardSensor, {})
+    useSensor(KeyboardSensor)
   );
 
   const filteredColumns = useMemo(() => {
@@ -115,48 +93,18 @@ const Index = () => {
     }));
   }, [columns, searchQuery]);
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
+  const handleDragStart = (event) => {
+    const activeId = event.active.id;
+
     const task = columns
       .flatMap((col) => col.tasks)
-      .find((t) => t.id === active.id);
+      .find((t) => t.id === activeId);
+
     setActiveTask(task || null);
   };
 
   const handleDragOver = (event) => {
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeId = active.id;
-    const overId = over.id;
-
-    const activeColumn = columns.find((col) =>
-      col.tasks.some((t) => t.id === activeId)
-    );
-    const overColumn = columns.find((col) =>
-      col.tasks.some((t) => t.id === overId)
-    );
-
-    if (!activeColumn || !overColumn) return;
-
-    if (activeColumn.id !== overColumn.id) return;
-
-    const activeTasks = activeColumn.tasks;
-    const overIndex = overColumn.tasks.findIndex((t) => t.id === overId);
-    const activeIndex = activeTasks.findIndex((t) => t.id === activeId);
-
-    if (activeIndex !== overIndex) {
-      setColumns((prev) =>
-        prev.map((col) =>
-          col.id === activeColumn.id
-            ? {
-                ...col,
-                tasks: arrayMove(col.tasks, activeIndex, overIndex),
-              }
-            : col
-        )
-      );
-    }
+    //
   };
 
   const handleDragEnd = async ({ active, over }) => {
@@ -164,87 +112,89 @@ const Index = () => {
     if (!over) return;
 
     const activeId = active.id;
+    const dropTargetId = over.id;
 
-    const dropColumnDirect = columns.find((col) => col.id === over.id);
-    const dropColumnByTask = columns.find((col) =>
-      col.tasks.some((t) => t.id === over.id)
-    );
-
-    const finalColumn = dropColumnDirect || dropColumnByTask;
-    if (!finalColumn) return;
-
-    const newStatus = finalColumn.id;
-
-    const activeColumn = columns.find((col) =>
+    const fromColumn = columns.find((col) =>
       col.tasks.some((t) => t.id === activeId)
     );
+    if (!fromColumn) return;
 
-    const task = activeColumn?.tasks.find((t) => t.id === activeId);
+    const task = fromColumn?.tasks.find((t) => t.id === activeId);
     if (!task) return;
 
-    if (task.status === newStatus) return;
+    const dropColumn =
+      columns.find((c) => c.id === dropTargetId) ||
+      columns.find((c) => c.tasks.some((t) => t.id === dropTargetId));
 
-    try {
-      await api(`/task/${activeId}/status`, {
-        method: "PATCH",
-        body: JSON.stringify({ status: newStatus }),
-      });
-    } catch (err) {
-      console.error("Failed to update status:", err);
+    if (!dropColumn) return;
+
+    const newColumnId = dropColumn.id;
+
+    if (fromColumn.id === dropColumn.id) {
+      const oldI = fromColumn.tasks.findIndex((t) => t.id === activeId);
+      const newI = dropColumn.tasks.findIndex((t) => t.id === dropTargetId);
+
+      if (oldI === newI) return;
+
+      const reorderedTasks = arrayMove(fromColumn.tasks, oldI, newI);
+
+      setColumns((prev) =>
+        prev.map((col) =>
+          col.id === fromColumn.id ? { ...col, tasks: reorderedTasks } : col
+        )
+      );
+      return;
     }
 
     setColumns((prev) =>
-      prev.map((col) => ({
-        ...col,
-        tasks:
-          col.id === activeColumn.id
-            ? col.tasks.filter((t) => t.id !== activeId)
-            : col.id === newStatus
-            ? [{ ...task, status: newStatus }, ...col.tasks]
-            : col.tasks,
-      }))
-    );
-  };
-  setTimeout(() => {
-    const reordered = columns.flatMap((col) =>
-      col.tasks.map((task, index) => ({
-        _id: task.id,
-        order: index,
-      }))
+      prev.map((col) => {
+        if (col.id === fromColumn.id) 
+          return { ...col, tasks: col.tasks.filter((t) => t.id !== activeId) };
+        if (col.id === dropColumn.id)
+          return {
+            ...col,
+            tasks: [...col.tasks, { ...task, columnId: dropColumn.id }],
+          };
+        return col;
+      })
     );
 
-    api("/task/reorder", {
-      method: "PUT",
-      body: JSON.stringify({ tasks: reordered }),
-    }).catch((err) => {
-      console.error("Failed to reorder tasks:", err);
-    });
-  }, 0);
+    try {
+      await api(`/tasks/${activeId}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ columnId: newColumnId }),
+      });
+      fetch();
+    } catch (err) {
+      console.error("Failed to update status:", err);
+    }
+  };
 
   const handleAddTask = async (taskData) => {
     try {
-      const res = await api("/task", {
+      const res = await api("/tasks", {
         method: "POST",
         body: JSON.stringify({
           title: taskData.name,
           description: taskData.description,
           dueDate: taskData.dueDate,
-          status: taskData.status,
+          columnId: taskData.status,
         }),
       });
 
+      const t = res.task;
+
       const newTask = {
-        id: res.task._id,
-        name: res.task.title,
-        description: res.task.description,
-        dueDate: res.task.dueDate,
-        status: res.task.status,
-        createdAt: res.task.createdAt,
+        id: t._id,
+        name: t.title,
+        description: t.description,
+        dueDate: t.dueDate,
+        columnId: t.columnId,
       };
 
-      setColumns((prevColumns) =>
-        prevColumns.map((col) =>
-          col.id === newTask.status
+      setColumns((prev) =>
+        prev.map((col) =>
+          col.id === newTask.columnId
             ? { ...col, tasks: [newTask, ...col.tasks] }
             : col
         )
@@ -254,14 +204,14 @@ const Index = () => {
     }
   };
 
-  const handleDeleteTask = async (taskId, status) => {
+  const handleDeleteTask = async (taskId) => {
     try {
-      await api(`/task/${taskId}`, { method: "DELETE" });
+      await api(`/tasks/${taskId}`, { method: "DELETE" });
 
       setColumns((prev) =>
         prev.map((col) => ({
           ...col,
-          tasks: col.tasks.filter((task) => task.id !== taskId),
+          tasks: col.tasks.filter((t) => t.id !== taskId),
         }))
       );
     } catch (error) {
@@ -269,18 +219,18 @@ const Index = () => {
     }
   };
 
-  const handleOpenModal = (status: TaskStatus) => {
+  const handleOpenModal = (columnId) => {
     setEditingTask(null);
-    setSelectedStatus(status);
+    setSelectedStatus(columnId);
     setIsModalOpen(true);
   };
 
-  const handleEditTask = (task: Task) => {
+  const handleEditTask = (task) => {
     setEditingTask({
       ...task,
       dueDate: task.dueDate ? task.dueDate.split("T")[0] : "",
     });
-    setSelectedStatus(task.status);
+    setSelectedStatus(task.columnId);
     setIsModalOpen(true);
   };
 
@@ -292,7 +242,7 @@ const Index = () => {
           title: updatedTask.name,
           description: updatedTask.description,
           dueDate: updatedTask.dueDate,
-          status: updatedTask.status,
+          columnId: updatedTask.status,
         }),
       });
 
@@ -307,9 +257,8 @@ const Index = () => {
                   id: backendTask._id,
                   name: backendTask.title,
                   description: backendTask.description,
-                  status: backendTask.status,
                   dueDate: backendTask.dueDate,
-                  createdAt: backendTask.createdAt,
+                  columnId: backendTask.columnId,
                 }
               : t
           ),
@@ -320,13 +269,18 @@ const Index = () => {
     }
   };
 
-  const handleAddColumn = (title: string) => {
-    const newColumn: Column = {
-      id: `column-${Date.now()}`,
-      title,
-      tasks: [],
-    };
-    setColumns((prevColumns) => [...prevColumns, newColumn]);
+  const handleAddColumn = async (title) => {
+    const id = `column-${Date.now()}`;
+    try {
+      await api("/columns", {
+        method: "POST",
+        body: JSON.stringify({ id, title }),
+      });
+
+      setColumns((prev) => [...prev, { id, title, tasks: [] }]);
+    } catch (err) {
+      console.error("Failed to add column", err);
+    }
   };
 
   return (
@@ -341,7 +295,7 @@ const Index = () => {
 
             <div className="flex items-center gap-4">
               <Button
-                onClick={() => handleOpenModal("pending")}
+                onClick={() => handleOpenModal(columns[0]?.id || "pending")}
                 className="shadow-[var(--shadow-sm)]"
               >
                 Add New Task
@@ -356,7 +310,7 @@ const Index = () => {
       </div>
 
       {/* Board */}
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-[1600px] mx-auto px-6 py-6">
         <DndContext
           sensors={sensors}
           onDragStart={handleDragStart}
@@ -375,9 +329,7 @@ const Index = () => {
                   title={column.title}
                   tasks={column.tasks}
                   onAddTask={handleOpenModal}
-                  onDeleteTask={(taskId: string) =>
-                    handleDeleteTask(taskId, column.id)
-                  }
+                  onDeleteTask={(taskId) => handleDeleteTask(taskId)}
                   onEditTask={handleEditTask}
                 />
               ))}
@@ -396,6 +348,7 @@ const Index = () => {
         </DndContext>
       </div>
 
+      {/* Modals */}
       <AddTaskModal
         isOpen={isModalOpen}
         onClose={() => {

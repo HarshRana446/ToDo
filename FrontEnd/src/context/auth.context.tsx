@@ -5,11 +5,21 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import { jwtDecode } from "jwt-decode";
+
+interface DecodedToken {
+  userId: string;
+  username: string;
+  email: string;
+  tokenVersion: number;
+  exp: number;
+}
 
 interface User {
   _id: string;
   username: string;
   email: string;
+  profileImage?: string | null;
 }
 
 interface AuthContextType {
@@ -19,6 +29,7 @@ interface AuthContextType {
   signup: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
+  updateProfileImage: (imageUrl: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,11 +41,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
 
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+    if (storedToken) {
+      try {
+        const decoded = jwtDecode<DecodedToken>(storedToken);
+        const storedProfileImage = localStorage.getItem("profileImage");
+
+        setUser({
+          _id: decoded.userId,
+          username: decoded.username,
+          email: decoded.email,
+          profileImage: storedProfileImage,
+        });
+        setToken(storedToken);
+      } catch (err) {
+        console.error("Invalid token", err);
+        localStorage.removeItem("token");
+      }
     }
     setIsLoading(false);
   }, []);
@@ -52,10 +75,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const data = await response.json();
-    setToken(data.token);
-    setUser(data.user);
     localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
+    const decoded = jwtDecode<DecodedToken>(data.token);
+    const storedProfileImage = localStorage.getItem("profileImage");
+
+    setUser({
+      _id: decoded.userId,
+      username: decoded.username,
+      email: decoded.email,
+      profileImage: storedProfileImage,
+    });
+    setToken(data.token);
   };
 
   const signup = async (username: string, email: string, password: string) => {
@@ -77,12 +107,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setToken(null);
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    localStorage.removeItem("profileImage");
+  };
+
+  const updateProfileImage = (imageUrl: string | null) => {
+    if (user) {
+      const updatedUser = { ...user, profileImage: imageUrl };
+      setUser(updatedUser);
+      if (imageUrl) {
+        localStorage.setItem("profileImage", imageUrl);
+      } else {
+        localStorage.removeItem("profileImage");
+      }
+    }
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, token, login, signup, logout, isLoading }}
+      value={{
+        user,
+        token,
+        login,
+        signup,
+        logout,
+        isLoading,
+        updateProfileImage,
+      }}
     >
       {children}
     </AuthContext.Provider>

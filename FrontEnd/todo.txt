@@ -65,7 +65,6 @@ frontend and backend bug fix
 complete UI with multiple user
 learn MongoDB and Quries
 
-
-middleware,
+In Middleware Bug fix
 task's array like when we drag and drop verticle it also change in backend,
 Edit duedate Bug fix,

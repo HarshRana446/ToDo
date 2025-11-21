@@ -5,7 +5,14 @@ import { X } from "lucide-react";
 interface AddTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (task: Omit<Task, "id" | "createdAt">) => void;
+  onAdd: (task: {
+    name: string;
+    description: string;
+    dueDate: string;
+    status: string;
+    columnId: string;
+  }) => void;
+
   onUpdate?: (task: Task) => void;
   initialStatus: TaskStatus;
   editTask?: Task;
@@ -48,7 +55,7 @@ const AddTaskModal = ({
         name: name.trim(),
         description: description.trim(),
         dueDate,
-        status,
+        columnId: status,
       });
     } else {
       onAdd({
@@ -56,6 +63,7 @@ const AddTaskModal = ({
         description: description.trim(),
         dueDate,
         status,
+        columnId: status,
       });
     }
 

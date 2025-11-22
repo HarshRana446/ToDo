@@ -60,7 +60,6 @@ const Index = () => {
               description: task.description || "",
               dueDate: task.dueDate || null,
               columnId: task.columnId || "pending",
-              status: task.status || "pending",
             })),
         }));
 
@@ -148,7 +147,7 @@ const Index = () => {
 
     setColumns((prev) =>
       prev.map((col) => {
-        if (col.id === fromColumn.id) 
+        if (col.id === fromColumn.id)
           return { ...col, tasks: col.tasks.filter((t) => t.id !== activeId) };
         if (col.id === dropColumn.id)
           return {
@@ -178,7 +177,7 @@ const Index = () => {
           title: taskData.name,
           description: taskData.description,
           dueDate: taskData.dueDate,
-          columnId: taskData.status,
+          columnId: taskData.columnId || "pending",
         }),
       });
 
@@ -199,6 +198,7 @@ const Index = () => {
             : col
         )
       );
+      console.log(newTask);
     } catch (error) {
       console.error("Error creating task:", error);
     }
@@ -242,7 +242,7 @@ const Index = () => {
           title: updatedTask.name,
           description: updatedTask.description,
           dueDate: updatedTask.dueDate,
-          columnId: updatedTask.status,
+          columnId: updatedTask.columnId,
         }),
       });
 
@@ -270,14 +270,13 @@ const Index = () => {
   };
 
   const handleAddColumn = async (title) => {
-    const id = `column-${Date.now()}`;
     try {
       await api("/columns", {
         method: "POST",
-        body: JSON.stringify({ id, title }),
+        body: JSON.stringify({ title }),
       });
 
-      setColumns((prev) => [...prev, { id, title, tasks: [] }]);
+      setColumns((prev) => [...prev, { title, tasks: [] }]);
     } catch (err) {
       console.error("Failed to add column", err);
     }

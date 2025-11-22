@@ -137,6 +137,7 @@ const AddTaskModal = ({
               id="task-due-date"
               type="date"
               value={dueDate}
+              min={new Date().toISOString().split("T")[0]}
               onChange={(e) => setDueDate(e.target.value)}
               className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
               required

@@ -11,17 +11,11 @@ const taskSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
-      trim: true,
     },
     description: {
       type: String,
       required: true,
-      trim: true,
       default: "",
-    },
-    status: {
-      type: String,
-      required: true,
     },
     dueDate: {
       type: Date,
@@ -33,9 +27,11 @@ const taskSchema = new mongoose.Schema(
       default: 0,
     },
     columnId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Column",
+      unique: true,
       required: true,
-      default: "pending",
+      default: ["pending", "in-progress", "done"],
     },
   },
   { timestamps: true }

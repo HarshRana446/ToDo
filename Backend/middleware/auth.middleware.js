@@ -14,10 +14,6 @@ export const AuthMiddleware = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    if (user.tokenVersion !== decoded.tokenVersion) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-
     req.user = decoded;
     next();
   } catch (error) {

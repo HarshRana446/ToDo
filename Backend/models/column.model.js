@@ -8,11 +8,6 @@ const columnSchema = mongoose.Schema(
       required: true,
       index: true,
     },
-    id: {
-      type: String,
-      required: true,
-      unique: true,
-    },
     title: {
       type: String,
       required: true,

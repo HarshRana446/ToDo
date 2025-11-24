@@ -36,7 +36,6 @@ export const updateTaskStatus = async (req, res) => {
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.userId },
       { columnId },
-      { new: true }
     );
 
     if (!task) {
@@ -60,9 +59,8 @@ export const updateTask = async (req, res) => {
     };
 
     const task = await Task.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user.userId },
+      { userId: req.user.userId },
       payload,
-      { new: true }
     );
 
     if (!task) {
@@ -79,7 +77,6 @@ export const updateTask = async (req, res) => {
 export const deleteTask = async (req, res) => {
   try {
     const deleted = await Task.findOneAndDelete({
-      _id: req.params.id,
       userId: req.user.userId,
     });
 
@@ -100,9 +97,8 @@ export const reorderTasks = async (req, res) => {
 
     const updates = tasks.map((t) => {
       return Task.findOneAndUpdate(
-        { _id: t._id, userId: req.user.userId },
+        { userId: req.user.userId },
         { order: t.order },
-        { new: true }
       );
     });
 

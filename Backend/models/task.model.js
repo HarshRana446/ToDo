@@ -24,14 +24,11 @@ const taskSchema = new mongoose.Schema(
     order: {
       type: Number,
       required: true,
-      default: 0,
     },
     columnId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Column",
-      unique: true,
       required: true,
-      default: ["pending", "in-progress", "done"],
     },
   },
   { timestamps: true }

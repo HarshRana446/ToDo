@@ -7,7 +7,7 @@ export interface Task {
   dueDate: string;
   status: string;
   createdAt: string;
-  columnId: String;
+  columnId: string;
 }
 
 export interface Column {

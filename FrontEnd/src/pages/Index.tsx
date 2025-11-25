@@ -153,7 +153,13 @@ const Index = () => {
         if (col.id === dropColumn.id)
           return {
             ...col,
-            tasks: [...col.tasks, { ...task, columnId: { _id: dropColumn.id, title: dropColumn.title } }],
+            tasks: [
+              ...col.tasks,
+              {
+                ...task,
+                columnId: { _id: dropColumn.id, title: dropColumn.title },
+              },
+            ],
           };
         return col;
       })
@@ -236,13 +242,16 @@ const Index = () => {
 
   const handleUpdateTask = async (updatedTask) => {
     try {
-      const res = await api(`/task/${updatedTask.id}`, {
+      const res = await api(`/tasks/${updatedTask.id}`, {
         method: "PUT",
         body: JSON.stringify({
           title: updatedTask.name,
           description: updatedTask.description,
           dueDate: updatedTask.dueDate,
-          columnId: updatedTask.columnId,
+          columnId:
+            typeof updatedTask.columnId === "object"
+              ? updatedTask.columnId._id
+              : updatedTask.columnId,
         }),
       });
 
@@ -258,7 +267,7 @@ const Index = () => {
                   name: backendTask.title,
                   description: backendTask.description,
                   dueDate: backendTask.dueDate,
-                  columnId: backendTask.columnId._id,
+                  columnId: backendTask.columnId,
                 }
               : t
           ),

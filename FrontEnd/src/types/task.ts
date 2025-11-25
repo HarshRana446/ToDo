@@ -1,13 +1,16 @@
 export type TaskStatus = string;
 
 export interface Task {
-  id: string;
+  _id: string;
   name: string;
   description: string;
   dueDate: string;
   status: string;
   createdAt: string;
-  columnId: string;
+  columnId: {
+    _id: string;
+    title: string;
+  };
 }
 
 export interface Column {

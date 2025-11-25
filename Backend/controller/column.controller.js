@@ -16,9 +16,7 @@ export const createColumn = async (req, res) => {
 
 export const getColumns = async (req, res) => {
   try {
-    const columns = await Column.find({ userId: req.user.userId }).sort({
-      createdAt: 1,
-    });
+    const columns = await Column.find({ userId: req.user.userId })
     res.status(200).json({ columns });
   } catch (error) {
     console.error(error);

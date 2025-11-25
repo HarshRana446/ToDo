@@ -53,13 +53,14 @@ const Index = () => {
           id: col._id,
           title: col.title,
           tasks: tasks
-            .filter((t) => t.columnId === col._id)
+            .filter((t) => String(t.columnId?._id) === String(col._id))
             .map((task) => ({
               id: task._id,
+              _id: task._id,
               name: task.title,
               description: task.description || "",
               dueDate: task.dueDate || null,
-              columnId: task.columnId || "pending",
+              columnId: task.columnId,
             })),
         }));
 
@@ -97,7 +98,7 @@ const Index = () => {
 
     const task = columns
       .flatMap((col) => col.tasks)
-      .find((t) => t.id === activeId);
+      .find((t) => t._id === activeId);
 
     setActiveTask(task || null);
   };
@@ -114,24 +115,24 @@ const Index = () => {
     const dropTargetId = over.id;
 
     const fromColumn = columns.find((col) =>
-      col.tasks.some((t) => t.id === activeId)
+      col.tasks.some((t) => t._id === activeId)
     );
     if (!fromColumn) return;
 
-    const task = fromColumn?.tasks.find((t) => t.id === activeId);
+    const task = fromColumn?.tasks.find((t) => t._id === activeId);
     if (!task) return;
 
     const dropColumn =
       columns.find((c) => c.id === dropTargetId) ||
-      columns.find((c) => c.tasks.some((t) => t.id === dropTargetId));
+      columns.find((c) => c.tasks.some((t) => t._id === dropTargetId));
 
     if (!dropColumn) return;
 
     const newColumnId = dropColumn.id;
 
     if (fromColumn.id === dropColumn.id) {
-      const oldI = fromColumn.tasks.findIndex((t) => t.id === activeId);
-      const newI = dropColumn.tasks.findIndex((t) => t.id === dropTargetId);
+      const oldI = fromColumn.tasks.findIndex((t) => t._id === activeId);
+      const newI = dropColumn.tasks.findIndex((t) => t._id === dropTargetId);
 
       if (oldI === newI) return;
 
@@ -148,11 +149,11 @@ const Index = () => {
     setColumns((prev) =>
       prev.map((col) => {
         if (col.id === fromColumn.id)
-          return { ...col, tasks: col.tasks.filter((t) => t.id !== activeId) };
+          return { ...col, tasks: col.tasks.filter((t) => t._id !== activeId) };
         if (col.id === dropColumn.id)
           return {
             ...col,
-            tasks: [...col.tasks, { ...task, columnId: dropColumn.id }],
+            tasks: [...col.tasks, { ...task, columnId: { _id: dropColumn.id, title: dropColumn.title } }],
           };
         return col;
       })
@@ -193,12 +194,11 @@ const Index = () => {
 
       setColumns((prev) =>
         prev.map((col) =>
-          col.id === newTask.columnId
+          col.id === newTask.columnId._id
             ? { ...col, tasks: [newTask, ...col.tasks] }
             : col
         )
       );
-      console.log(newTask);
     } catch (error) {
       console.error("Error creating task:", error);
     }
@@ -211,7 +211,7 @@ const Index = () => {
       setColumns((prev) =>
         prev.map((col) => ({
           ...col,
-          tasks: col.tasks.filter((t) => t.id !== taskId),
+          tasks: col.tasks.filter((t) => t._id !== taskId),
         }))
       );
     } catch (error) {
@@ -252,13 +252,13 @@ const Index = () => {
         prev.map((col) => ({
           ...col,
           tasks: col.tasks.map((t) =>
-            t.id === backendTask._id
+            t._id === backendTask._id
               ? {
                   id: backendTask._id,
                   name: backendTask.title,
                   description: backendTask.description,
                   dueDate: backendTask.dueDate,
-                  columnId: backendTask.columnId,
+                  columnId: backendTask.columnId._id,
                 }
               : t
           ),
@@ -271,12 +271,15 @@ const Index = () => {
 
   const handleAddColumn = async (title) => {
     try {
-      await api("/columns", {
+      const res = await api("/columns", {
         method: "POST",
         body: JSON.stringify({ title }),
       });
 
-      setColumns((prev) => [...prev, { title, tasks: [] }]);
+      setColumns((prev) => [
+        ...prev,
+        { id: res.column._id, title: res.column.title, tasks: [] },
+      ]);
     } catch (err) {
       console.error("Failed to add column", err);
     }

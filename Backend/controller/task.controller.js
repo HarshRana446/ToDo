@@ -1,6 +1,7 @@
 import Task from "../models/task.model.js";
 
 export const createTask = async (req, res) => {
+  const count = await Task.countDocuments({ userId: req.user.userId });
   try {
     const payload = {
       title: req.body.title,
@@ -8,6 +9,7 @@ export const createTask = async (req, res) => {
       userId: req.user.userId,
       dueDate: req.body.dueDate,
       columnId: req.body.columnId,
+      order: count,
     };
     const task = await Task.create(payload);
     res.status(201).json({ task });
@@ -19,9 +21,11 @@ export const createTask = async (req, res) => {
 
 export const getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find({ userId: req.user.userId }).sort({
-      order: 1,
-    });
+    const tasks = await Task.find({ userId: req.user.userId })
+      .sort({
+        order: 1,
+      })
+      .populate("columnId");
     res.status(200).json({ tasks });
   } catch (error) {
     console.error(error);
@@ -36,13 +40,14 @@ export const updateTaskStatus = async (req, res) => {
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.userId },
       { columnId },
+      { new: true }
     );
-
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
     }
+    const updated = await Task.findById(task._id).populate("columnId");
 
-    res.status(200).json({ task });
+    res.status(200).json({ task: updated });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
@@ -59,8 +64,9 @@ export const updateTask = async (req, res) => {
     };
 
     const task = await Task.findOneAndUpdate(
-      { userId: req.user.userId },
+      { _id: req.params.id, userId: req.user.userId },
       payload,
+      { new: true }
     );
 
     if (!task) {
@@ -77,6 +83,7 @@ export const updateTask = async (req, res) => {
 export const deleteTask = async (req, res) => {
   try {
     const deleted = await Task.findOneAndDelete({
+      _id: req.params.id,
       userId: req.user.userId,
     });
 
@@ -97,8 +104,8 @@ export const reorderTasks = async (req, res) => {
 
     const updates = tasks.map((t) => {
       return Task.findOneAndUpdate(
-        { userId: req.user.userId },
-        { order: t.order },
+        { _id: t._id, userId: req.user.userId },
+        { order: t.order }
       );
     });
 

@@ -40,13 +40,13 @@ const KanbanColumn = ({
         className="flex flex-col min-h-[200px] bg-gray-200 rounded-lg p-3"
       >
         <SortableContext
-          items={tasks.map((t) => t.id)}
+          items={tasks.map((t) => t._id)}
           strategy={verticalListSortingStrategy}
         >
           <div className="flex flex-col gap-3 overflow-y-auto max-h-[700px]">
             {tasks.map((task) => (
               <TaskCard
-                key={task.id}
+                key={task._id}
                 task={task}
                 onDeleteTask={onDeleteTask}
                 onEditTask={onEditTask}

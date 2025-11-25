@@ -22,9 +22,14 @@ interface TaskCardProps {
   isOverlay?: boolean;
 }
 
-const TaskCard = ({ task, onDeleteTask, onEditTask, isOverlay = false }: TaskCardProps) => {
+const TaskCard = ({
+  task,
+  onDeleteTask,
+  onEditTask,
+  isOverlay = false,
+}: TaskCardProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  
+
   const {
     attributes,
     listeners,
@@ -32,7 +37,7 @@ const TaskCard = ({ task, onDeleteTask, onEditTask, isOverlay = false }: TaskCar
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: task.id, disabled: isOverlay });
+  } = useSortable({ id: task._id, disabled: isOverlay });
 
   const style = isOverlay
     ? {
@@ -46,7 +51,7 @@ const TaskCard = ({ task, onDeleteTask, onEditTask, isOverlay = false }: TaskCar
       };
 
   const handleDelete = () => {
-    onDeleteTask?.(task.id);
+    onDeleteTask?.(task._id);
     setShowDeleteDialog(false);
   };
 
@@ -63,11 +68,11 @@ const TaskCard = ({ task, onDeleteTask, onEditTask, isOverlay = false }: TaskCar
   };
 
   const getBorderColor = () => {
-    switch (task.status) {
+    switch (task.columnId?.title) {
       case "pending":
         return "border-l-[hsl(var(--status-pending))]";
       case "in-progress":
-        return "border-l-[hsl(var(--status-progress))]";
+        return "border-l-[hsl(var(--status-in-progress))]";
       case "done":
         return "border-l-[hsl(var(--status-done))]";
       default:
@@ -96,7 +101,7 @@ const TaskCard = ({ task, onDeleteTask, onEditTask, isOverlay = false }: TaskCar
         "relative group rounded-lg p-4 border-l-8 shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] transition-all duration-200 bg-[hsl(var(--card))]",
         getBorderColor(),
         dueDateSoon &&
-          task.status === "pending" &&
+          task.columnId?.title === "pending" &&
           !isDragging &&
           !isOverlay &&
           "bg-red-100 dark:bg-red-950/50"
@@ -144,12 +149,15 @@ const TaskCard = ({ task, onDeleteTask, onEditTask, isOverlay = false }: TaskCar
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Task</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{task.name}"? This action cannot be undone.
+              Are you sure you want to delete "{task.name}"? This action cannot
+              be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Confirm</AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete}>
+              Confirm
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

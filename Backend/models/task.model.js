@@ -27,7 +27,7 @@ const taskSchema = new mongoose.Schema(
     },
     columnId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Column",
+      ref:"Column",
       required: true,
     },
   },

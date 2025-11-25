@@ -119,30 +119,45 @@ const Index = () => {
     );
     if (!fromColumn) return;
 
-    const task = fromColumn?.tasks.find((t) => t._id === activeId);
+    const task = fromColumn.tasks.find((t) => t._id === activeId);
     if (!task) return;
 
     const dropColumn =
       columns.find((c) => c.id === dropTargetId) ||
       columns.find((c) => c.tasks.some((t) => t._id === dropTargetId));
-
     if (!dropColumn) return;
 
     const newColumnId = dropColumn.id;
 
     if (fromColumn.id === dropColumn.id) {
-      const oldI = fromColumn.tasks.findIndex((t) => t._id === activeId);
-      const newI = dropColumn.tasks.findIndex((t) => t._id === dropTargetId);
+      const oldIndex = fromColumn.tasks.findIndex((t) => t._id === activeId);
+      const newIndex = dropColumn.tasks.findIndex(
+        (t) => t._id === dropTargetId
+      );
+      if (oldIndex === newIndex) return;
 
-      if (oldI === newI) return;
-
-      const reorderedTasks = arrayMove(fromColumn.tasks, oldI, newI);
+      const reordered = arrayMove(fromColumn.tasks, oldIndex, newIndex);
 
       setColumns((prev) =>
         prev.map((col) =>
-          col.id === fromColumn.id ? { ...col, tasks: reorderedTasks } : col
+          col.id === fromColumn.id ? { ...col, tasks: reordered } : col
         )
       );
+
+      try {
+        await api("/tasks/reorder", {
+          method: "PUT",
+          body: JSON.stringify({
+            tasks: reordered.map((t: any, index: number) => ({
+              _id: t._id,
+              order: index,
+            })),
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to reorder:", err);
+      }
+
       return;
     }
 
@@ -150,6 +165,7 @@ const Index = () => {
       prev.map((col) => {
         if (col.id === fromColumn.id)
           return { ...col, tasks: col.tasks.filter((t) => t._id !== activeId) };
+
         if (col.id === dropColumn.id)
           return {
             ...col,
@@ -161,6 +177,7 @@ const Index = () => {
               },
             ],
           };
+
         return col;
       })
     );
@@ -170,10 +187,11 @@ const Index = () => {
         method: "PATCH",
         body: JSON.stringify({ columnId: newColumnId }),
       });
-      fetch();
     } catch (err) {
       console.error("Failed to update status:", err);
     }
+
+    fetch();
   };
 
   const handleAddTask = async (taskData) => {
@@ -184,14 +202,14 @@ const Index = () => {
           title: taskData.name,
           description: taskData.description,
           dueDate: taskData.dueDate,
-          columnId: taskData.columnId || "pending",
+          columnId: taskData.columnId,
         }),
       });
 
       const t = res.task;
 
       const newTask = {
-        id: t._id,
+        _id: t._id,
         name: t.title,
         description: t.description,
         dueDate: t.dueDate,

@@ -105,7 +105,8 @@ export const reorderTasks = async (req, res) => {
     const updates = tasks.map((t) => {
       return Task.findOneAndUpdate(
         { _id: t._id, userId: req.user.userId },
-        { order: t.order }
+        { order: t.order },
+        { new: true }
       );
     });
 

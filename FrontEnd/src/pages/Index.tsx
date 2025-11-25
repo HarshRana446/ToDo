@@ -218,7 +218,7 @@ const Index = () => {
 
       setColumns((prev) =>
         prev.map((col) =>
-          col.id === newTask.columnId._id
+          col.id === newTask.columnId
             ? { ...col, tasks: [newTask, ...col.tasks] }
             : col
         )

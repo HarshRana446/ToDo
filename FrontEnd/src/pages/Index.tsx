@@ -298,6 +298,14 @@ const Index = () => {
 
   const handleAddColumn = async (title) => {
     try {
+      const exists = columns.some(
+        (col) => col.title.toLowerCase() === title.toLowerCase()
+      );
+
+      if (exists) {
+        alert("Column name already exists!");
+        return;
+      }
       const res = await api("/columns", {
         method: "POST",
         body: JSON.stringify({ title }),

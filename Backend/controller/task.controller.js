@@ -1,7 +1,10 @@
 import Task from "../models/task.model.js";
 
 export const createTask = async (req, res) => {
-  const count = await Task.countDocuments({ userId: req.user.userId });
+  const count = await Task.countDocuments({
+    userId: req.user.userId,
+    columnId: req.body.columnId,
+  });
   try {
     const payload = {
       title: req.body.title,
@@ -21,11 +24,9 @@ export const createTask = async (req, res) => {
 
 export const getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find({ userId: req.user.userId })
-      .sort({
-        order: 1,
-      })
-      .populate("columnId");
+    const tasks = await Task.find({ userId: req.user.userId }).populate(
+      "columnId"
+    );
     res.status(200).json({ tasks });
   } catch (error) {
     console.error(error);

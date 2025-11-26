@@ -49,20 +49,23 @@ const Index = () => {
         const cols = columnsRes.columns;
         const tasks = tasksRes.tasks;
 
-        const formatted = cols.map((col) => ({
-          id: col._id,
-          title: col.title,
-          tasks: tasks
-            .filter((t) => String(t.columnId?._id) === String(col._id))
-            .map((task) => ({
-              id: task._id,
-              _id: task._id,
-              name: task.title,
-              description: task.description || "",
-              dueDate: task.dueDate || null,
-              columnId: task.columnId,
-            })),
-        }));
+        const formatted = cols
+          .sort((a, b) => a.order - b.order)
+          .map((col) => ({
+            id: col._id,
+            title: col.title,
+            tasks: tasks
+              .filter((t) => String(t.columnId?._id) === String(col._id))
+              .sort((a, b) => a.order - b.order)
+              .map((task) => ({
+                id: task._id,
+                _id: task._id,
+                name: task.title,
+                description: task.description || "",
+                dueDate: task.dueDate || null,
+                columnId: task.columnId,
+              })),
+          }));
 
         setColumns(formatted);
       })

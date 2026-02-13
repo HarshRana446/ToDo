@@ -2,11 +2,12 @@ import dotenv from "dotenv";
 import cors from "cors";
 import express from "express";
 import http from "http";
-import connectDB from "./DB/db.js";
+import connectDB from "./db/db.js";
 import authroutes from "./routes/auth.routes.js";
 import userroutes from "./routes/user.routes.js";
 import taskroutes from "./routes/task.routes.js";
 import columnroutes from "./routes/column.routes.js";
+import { Server } from "socket.io";
 
 dotenv.config();
 connectDB();
@@ -22,7 +23,25 @@ app.use("/columns", columnroutes);
 
 const PORT = process.env.PORT;
 const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("New client connected: " + socket.id);
+
+  socket.on("join", (data) => {
+    socket.join(data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected: " + socket.id);
+  });
+});
+
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-

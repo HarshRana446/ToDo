@@ -15,7 +15,7 @@ export const AuthMiddleware = async (req, res, next) => {
     }
     console.log(accessToken);
     const user = await User.findById(decoded.userId);
-
+    console.log(user)
     if (!user) {
       return res.status(401).json({ message: "Unauthorized" });
     }

@@ -4,14 +4,14 @@ import User from "../models/user.model.js";
 export const AuthMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Unauthorized" });
+    return res.status(401).json({ message: "token not found" });
   }
   const token = authHeader.split(" ")[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const accessToken = req.headers.accesstoken;
     if (decoded.userId !== accessToken) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ message: "Access Token Mismatch" });
     }
     console.log(accessToken);
     const user = await User.findById(decoded.userId);

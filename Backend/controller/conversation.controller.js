@@ -2,8 +2,7 @@ import Conversation from "../models/conversation.model.js";
 
 export const createConversation = async (req, res) => {
   try {
-    console.log("🚀 ~ createConversation ~ req.user._id:", req.user._id);
-    const senderId = req.user?._id || req.body.userId;
+    const senderId = req.user?._id 
     console.log("🚀 ~ createConversation ~ senderId:", senderId);
     const { receiverId } = req.params;
 

@@ -8,25 +8,27 @@ import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./context/auth.context.tsx";
 import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
-
+import { ChatDisplay } from "./components/chat/ChatDisplay.tsx";
+import ChatPage from "./pages/chat.tsx";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="*" element={<NotFound />} />
+            <Route path="/chat" element={<ChatPage />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

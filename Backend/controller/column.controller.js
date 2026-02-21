@@ -1,5 +1,4 @@
 import Column from "../models/column.model.js";
-
 export const createColumn = async (req, res) => {
   try {
     const existing = await Column.findOne({

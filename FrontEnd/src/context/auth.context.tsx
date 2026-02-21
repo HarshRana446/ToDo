@@ -44,16 +44,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (storedToken) {
       try {
-        const decoded = jwtDecode<DecodedToken>(storedToken);
-        const storedProfileImage = localStorage.getItem("profileImage");
-
-        setUser({
-          _id: decoded.userId,
-          username: decoded.username,
-          email: decoded.email,
-          profileImage: storedProfileImage,
-        });
-        setToken(storedToken);
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser)
+          setUser(parsed);
+        }
       } catch (err) {
         console.error("Invalid token", err);
         localStorage.removeItem("token");
@@ -76,15 +71,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const data = await response.json();
     localStorage.setItem("token", data.token);
-    const decoded = jwtDecode<DecodedToken>(data.token);
-    const storedProfileImage = localStorage.getItem("profileImage");
 
-    setUser({
-      _id: decoded.userId,
-      username: decoded.username,
-      email: decoded.email,
-      profileImage: storedProfileImage,
-    });
+    if (data.user) {
+      localStorage.setItem("user", JSON.stringify(data.user));
+    }
+
+    setUser(data.user);
     setToken(data.token);
   };
 
@@ -107,18 +99,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setToken(null);
     localStorage.removeItem("token");
-    localStorage.removeItem("profileImage");
+    localStorage.removeItem("user");
   };
 
   const updateProfileImage = (imageUrl: string | null) => {
     if (user) {
       const updatedUser = { ...user, profileImage: imageUrl };
       setUser(updatedUser);
-      if (imageUrl) {
-        localStorage.setItem("profileImage", imageUrl);
-      } else {
-        localStorage.removeItem("profileImage");
-      }
+
+      try {
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+      } catch {}
     }
   };
 

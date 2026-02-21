@@ -9,8 +9,13 @@ export const AuthMiddleware = async (req, res, next) => {
   const token = authHeader.split(" ")[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+    const accessToken = req.headers.accesstoken;
+    if (decoded.userId !== accessToken) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    console.log(accessToken);
     const user = await User.findById(decoded.userId);
+
     if (!user) {
       return res.status(401).json({ message: "Unauthorized" });
     }

@@ -53,6 +53,6 @@ export const LoginController = async (req, res) => {
     res.status(200).json({ message: "Login successful", user, token });
   } catch (error) {
     console.error(error);
-    res.status(401).json({ message: "Unauthorized", error });
+    res.status(401).json({ message: "Login failed", error });
   }
 };

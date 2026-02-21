@@ -8,7 +8,8 @@ import userroutes from "./routes/user.routes.js";
 import taskroutes from "./routes/task.routes.js";
 import columnroutes from "./routes/column.routes.js";
 import { Server } from "socket.io";
-
+import conversationroutes from "./routes/conversation.routes.js";
+import messageroutes from "./routes/message.routes.js";
 dotenv.config();
 connectDB();
 
@@ -20,6 +21,8 @@ app.use("/auth", authroutes);
 app.use("/user", userroutes);
 app.use("/tasks", taskroutes);
 app.use("/columns", columnroutes);
+app.use("/chat", conversationroutes);
+app.use("/api", messageroutes);
 
 const PORT = process.env.PORT;
 const server = http.createServer(app);

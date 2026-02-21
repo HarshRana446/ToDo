@@ -2,65 +2,86 @@ import Conversation from "../models/conversation.model.js";
 
 export const createConversation = async (req, res) => {
   try {
-    const { senderId, receiverId } = req.body;
+    console.log("🚀 ~ createConversation ~ req.user._id:", req.user._id);
+    const senderId = req.user?._id || req.body.userId;
+    console.log("🚀 ~ createConversation ~ senderId:", senderId);
+    const { receiverId } = req.params;
 
     if (!senderId || !receiverId) {
       return res.status(400).json({
-        success: false,
-        message: "senderId and receiverId required",
+        error: {
+          senderId: "Sender ID is required",
+          receiverId: "Receiver ID is required",
+        },
       });
     }
 
-    let conversation = await Conversation.findOne({
-      participants: { $all: [senderId, receiverId] },
-    });
-
-    if (conversation) {
-      return res.status(200).json({
-        success: true,
-        message: "Conversation already exists",
-        data: conversation,
+    let conversation = await Conversation.findOneAndUpdate(
+      {
+        $in: [
+          {
+            "participants.senderId": {
+              senderId,
+              receiverId,
+            },
+          },
+          {
+            "participants.receiverId": {
+              receiverId,
+              senderId,
+            },
+          },
+        ],
+      },
+      {
+        $setOnInsert: {
+          participants: { senderId, receiverId },
+          createdAt: Date.now(),
+        },
+      },
+      {
+        upsert: true,
+        new: true,
+      },
+    );
+    if (!conversation) {
+      conversation = await Conversation.create({
+        participants: { senderId, receiverId },
       });
     }
-
-    conversation = await Conversation.create({
-      participants: [senderId, receiverId],
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: "Conversation created successfully",
-      data: conversation,
-    });
+    res
+      .status(201)
+      .json({ message: "Conversation created successfully", conversation });
   } catch (error) {
     console.error(error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    res.status(500).json({ message: "Conversation creation failed" });
   }
 };
 
 export const getUserConversations = async (req, res) => {
   try {
-    const userId = req.params.userId;
-
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ message: "userId is required" });
+    }
     const conversations = await Conversation.find({
-      participants: userId,
+      $or: [
+        { "participants.senderId": userId },
+        { "participants.receiverId": userId },
+      ],
     })
-      .populate("participants", "username email")
-      .populate("lastMessage");
-    return res.status(200).json({
-      success: true,
-      message: "Conversations retrieved successfully",
-      data: conversations,
-    });
+      .sort({ createdAt: -1 })
+      .populate("participants.senderId")
+      .populate("participants.receiverId");
+
+    console.log("🚀 ~ getUserConversations ~ conversations:", conversations);
+
+    if (!conversations || conversations.length === 0) {
+      return res.status(404).json({ message: "No conversations found" });
+    }
+    res.status(200).json({ conversations });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    res.status(500).json({ message: "Failed to fetch conversations" });
   }
 };

@@ -10,16 +10,16 @@ export const AuthMiddleware = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const accessToken = req.headers.accesstoken;
+    console.log(accessToken)
     if (decoded.userId !== accessToken) {
       return res.status(401).json({ message: "Access Token Mismatch" });
     }
-    console.log(accessToken);
     const user = await User.findById(decoded.userId);
     console.log(user)
     if (!user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-    req.user = decoded;
+    req.user = user;
     next();
   } catch (error) {
     console.error("Auth Middleware Error:", error);

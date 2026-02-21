@@ -5,6 +5,7 @@ export const createConversation = async (req, res) => {
     const senderId = req.user?._id 
     console.log("🚀 ~ createConversation ~ senderId:", senderId);
     const { receiverId } = req.params;
+    console.log("🚀 ~ createConversation ~ receiverId:", receiverId)
 
     if (!senderId || !receiverId) {
       return res.status(400).json({

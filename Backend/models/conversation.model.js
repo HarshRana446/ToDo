@@ -15,8 +15,22 @@ const ParticipantSchema = new mongoose.Schema({
 
 const conversationSchema = new mongoose.Schema(
   {
+<<<<<<< Updated upstream
     participants: {
       type: ParticipantSchema,
+=======
+    participants: 
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,a
+      },
+
+    lastMessage: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Message",
+      default: null,
+>>>>>>> Stashed changes
     },
   },
   {

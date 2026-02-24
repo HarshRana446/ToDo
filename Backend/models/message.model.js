@@ -17,7 +17,7 @@ const messageSchema = new mongoose.Schema(
       default: "",
     },
 
-    attechment: {
+    attachment: {
       type: [String],
       default: null,
     },

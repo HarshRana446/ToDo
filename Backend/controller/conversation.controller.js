@@ -1,11 +1,12 @@
 import Conversation from "../models/conversation.model.js";
+import Message from "../models/message.model.js";
 
 export const createConversation = async (req, res) => {
   try {
-    const senderId = req.user?._id 
+    const senderId = req.user?._id;
     console.log("🚀 ~ createConversation ~ senderId:", senderId);
     const { receiverId } = req.params;
-    console.log("🚀 ~ createConversation ~ receiverId:", receiverId)
+    console.log("🚀 ~ createConversation ~ receiverId:", receiverId);
 
     if (!senderId || !receiverId) {
       return res.status(400).json({
@@ -18,18 +19,14 @@ export const createConversation = async (req, res) => {
 
     let conversation = await Conversation.findOneAndUpdate(
       {
-        $in: [
+        $or: [
           {
-            "participants.senderId": {
-              senderId,
-              receiverId,
-            },
+            "participants.senderId": senderId,
+            "participants.receiverId": receiverId,
           },
           {
-            "participants.receiverId": {
-              receiverId,
-              senderId,
-            },
+            "participants.senderId": receiverId,
+            "participants.receiverId": senderId,
           },
         ],
       },
@@ -49,9 +46,11 @@ export const createConversation = async (req, res) => {
         participants: { senderId, receiverId },
       });
     }
-    res
-      .status(201)
-      .json({ message: "Conversation created successfully", conversation });
+    res.status(201).json({
+      message: "Conversation created successfully",
+      data: conversation,
+      success: true,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Conversation creation failed" });
@@ -60,10 +59,8 @@ export const createConversation = async (req, res) => {
 
 export const getUserConversations = async (req, res) => {
   try {
-    const { userId } = req.body;
-    if (!userId) {
-      return res.status(400).json({ message: "userId is required" });
-    }
+    const userId = req.user._id;
+
     const conversations = await Conversation.find({
       $or: [
         { "participants.senderId": userId },
@@ -74,12 +71,29 @@ export const getUserConversations = async (req, res) => {
       .populate("participants.senderId")
       .populate("participants.receiverId");
 
-    console.log("🚀 ~ getUserConversations ~ conversations:", conversations);
-
     if (!conversations || conversations.length === 0) {
-      return res.status(404).json({ message: "No conversations found" });
+      return res
+        .status(200)
+        .json({ message: "Start new conversation", success: true, data: [] });
     }
-    res.status(200).json({ conversations });
+
+    const conversationsWithLastMessage = await Promise.all(
+      conversations.map(async (conversation) => {
+        const lastMessage = await Message.findOne({
+          conversationId: conversation._id,
+        })
+          .sort({ createdAt: -1 })
+          .select("message createdAt");
+
+        return {
+          ...conversation.toObject(),
+          lastMessage: lastMessage ? lastMessage.message : "No messages",
+          lastMessageTime: lastMessage ? lastMessage.createdAt : conversation.createdAt,
+        };
+      })
+    );
+
+    res.status(200).json({ data: conversationsWithLastMessage, success: true });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Failed to fetch conversations" });

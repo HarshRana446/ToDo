@@ -80,7 +80,7 @@ const Index = () => {
     useSensor(TouchSensor, {
       activationConstraint: { delay: 250, tolerance: 5 },
     }),
-    useSensor(KeyboardSensor)
+    useSensor(KeyboardSensor),
   );
 
   const filteredColumns = useMemo(() => {
@@ -91,7 +91,7 @@ const Index = () => {
       tasks: column.tasks.filter(
         (task) =>
           task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          task.description.toLowerCase().includes(searchQuery.toLowerCase())
+          task.description.toLowerCase().includes(searchQuery.toLowerCase()),
       ),
     }));
   }, [columns, searchQuery]);
@@ -118,7 +118,7 @@ const Index = () => {
     const dropTargetId = over.id;
 
     const fromColumn = columns.find((col) =>
-      col.tasks.some((t) => t._id === activeId)
+      col.tasks.some((t) => t._id === activeId),
     );
     if (!fromColumn) return;
 
@@ -135,7 +135,7 @@ const Index = () => {
     if (fromColumn.id === dropColumn.id) {
       const oldIndex = fromColumn.tasks.findIndex((t) => t._id === activeId);
       const newIndex = dropColumn.tasks.findIndex(
-        (t) => t._id === dropTargetId
+        (t) => t._id === dropTargetId,
       );
       if (oldIndex === newIndex) return;
 
@@ -143,8 +143,8 @@ const Index = () => {
 
       setColumns((prev) =>
         prev.map((col) =>
-          col.id === fromColumn.id ? { ...col, tasks: reordered } : col
-        )
+          col.id === fromColumn.id ? { ...col, tasks: reordered } : col,
+        ),
       );
 
       try {
@@ -182,7 +182,7 @@ const Index = () => {
           };
 
         return col;
-      })
+      }),
     );
 
     try {
@@ -223,8 +223,8 @@ const Index = () => {
         prev.map((col) =>
           col.id === newTask.columnId
             ? { ...col, tasks: [newTask, ...col.tasks] }
-            : col
-        )
+            : col,
+        ),
       );
     } catch (error) {
       console.error("Error creating task:", error);
@@ -239,7 +239,7 @@ const Index = () => {
         prev.map((col) => ({
           ...col,
           tasks: col.tasks.filter((t) => t._id !== taskId),
-        }))
+        })),
       );
     } catch (error) {
       console.error("Failed to delete task", error);
@@ -290,9 +290,9 @@ const Index = () => {
                   dueDate: backendTask.dueDate,
                   columnId: backendTask.columnId,
                 }
-              : t
+              : t,
           ),
-        }))
+        })),
       );
     } catch (err) {
       console.error("Failed to update task", err);
@@ -302,7 +302,7 @@ const Index = () => {
   const handleAddColumn = async (title) => {
     try {
       const exists = columns.some(
-        (col) => col.title.toLowerCase() === title.toLowerCase()
+        (col) => col.title.toLowerCase() === title.toLowerCase(),
       );
 
       if (exists) {
@@ -344,6 +344,7 @@ const Index = () => {
               <SearchBar value={searchQuery} onChange={setSearchQuery} />
 
               <UserProfileDropdown />
+              <Button onClick={() => navigate("/chat")}>Go to Chat</Button>
             </div>
           </div>
         </div>

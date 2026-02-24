@@ -5,15 +5,6 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { jwtDecode } from "jwt-decode";
-
-interface DecodedToken {
-  userId: string;
-  username: string;
-  email: string;
-  tokenVersion: number;
-  exp: number;
-}
 
 interface User {
   _id: string;

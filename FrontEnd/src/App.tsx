@@ -8,8 +8,7 @@ import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./context/auth.context.tsx";
 import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
-import { ChatDisplay } from "./components/chat/ChatDisplay.tsx";
-import ChatPage from "./pages/chat.tsx";
+import ChatPage from "./pages/chat";
 
 const queryClient = new QueryClient();
 
